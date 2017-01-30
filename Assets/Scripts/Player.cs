@@ -8,11 +8,12 @@ public class Player : MonoBehaviour {
     public GameObject laserPrefab;
     public AudioSource laserSound;
 
-    private new Rigidbody rigidbody;
+    private float speed = 50;
+    private CharacterController controller;
     private float laserJumpForce = 1000;
     // Use this for initialization
     void Start () {
-        rigidbody = GetComponent<Rigidbody>();
+        controller = GetComponent<CharacterController>();
 	}
 	
 	// Update is called once per frame
@@ -22,6 +23,7 @@ public class Player : MonoBehaviour {
 
     void ProcessInput()
     {
+        PlayerMovement();
         // 0 = left click on mouse or tap on gear VR
         if (Input.GetMouseButtonDown(0) || Input.GetKeyDown("space"))
         {
@@ -31,9 +33,34 @@ public class Player : MonoBehaviour {
             //localEulerAngles gets the rotation as seen in the editor. Aka where it is in the world
             if (laser.transform.localEulerAngles.x > 80 && laser.transform.localEulerAngles.x < 100)    //If the player is shooting below them propel yourself up.
             {
-                rigidbody.AddForce(new Vector3(0, laserJumpForce, 0));
-            }
+                //Jump
+                //rigidbody.AddForce(new Vector3(0, laserJumpForce, 0));
+            }//*/
         }
-        print(Input.GetAxis("Mouse Y"));
+    }
+
+    void PlayerMovement()
+    {
+        Vector3 movement = Vector3.zero;
+
+        if (Input.GetAxis("Mouse Y") > 0)
+        {
+            movement += transform.TransformDirection(Vector3.forward);
+        }
+        else if (Input.GetAxis("Mouse Y") < 0)
+        {
+            movement += transform.TransformDirection(Vector3.back);
+        }
+
+        if (Input.GetAxis("Mouse X") > 0)
+        {
+            movement += transform.TransformDirection(Vector3.left);
+        }
+        else if (Input.GetAxis("Mouse X") < 0)
+        {
+            movement += transform.TransformDirection(Vector3.right);
+        }
+        controller.SimpleMove(Physics.gravity);
+        controller.SimpleMove(movement * speed);
     }
 }
