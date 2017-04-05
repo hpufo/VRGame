@@ -7,60 +7,42 @@ public class Player : MonoBehaviour {
     public Transform firePoint;                 //Where I am going to fire lasers from
     public GameObject laserPrefab;
     public AudioSource laserSound;
-
-    private float speed = 50;
+    //Character movement
+    private float jumpSpeed = 40;
+    private float gravity = 20;
+    private Vector3 moveDirection = Vector3.zero;
     private CharacterController controller;
-    private float laserJumpForce = 1000;
+
     // Use this for initialization
     void Start () {
         controller = GetComponent<CharacterController>();
-	}
+        OVRTouchpad.Create();
+        OVRTouchpad.TouchHandler += HandleTouchInput;
+    }
 	
 	// Update is called once per frame
 	void Update () {
-        ProcessInput();
+        //applying gravity and making the player move with all the applied forces
+        moveDirection.y -= gravity * Time.deltaTime;
+        controller.Move(moveDirection * Time.deltaTime);
     }
 
-    void ProcessInput()
+    void HandleTouchInput(object sender, System.EventArgs e)
     {
-        PlayerMovement();
-        // 0 = left click on mouse or tap on gear VR
-        if (Input.GetMouseButtonDown(0) || Input.GetKeyDown("space"))
+        OVRTouchpad.TouchArgs touchArgs = (OVRTouchpad.TouchArgs)e;
+        //Tap Also processed as a mouse click
+        if(touchArgs.TouchType == OVRTouchpad.TouchEvent.SingleTap)
         {
             GameObject laser = GameObject.Instantiate(laserPrefab, firePoint.position, firePoint.rotation);
             laserSound.Play();
-            //Jump code
-            //localEulerAngles gets the rotation as seen in the editor. Aka where it is in the world
-            if (laser.transform.localEulerAngles.x > 80 && laser.transform.localEulerAngles.x < 100)    //If the player is shooting below them propel yourself up.
+            //If the player shoots down propel yourself up
+            if (laser.transform.localEulerAngles.x > 80 && laser.transform.localEulerAngles.x < 100 && controller.isGrounded)
             {
-                //Jump
-                //rigidbody.AddForce(new Vector3(0, laserJumpForce, 0));
-            }//*/
+                //jump code
+                moveDirection.y = jumpSpeed;
+                moveDirection.y -= gravity * Time.deltaTime;
+                controller.Move(moveDirection * Time.deltaTime);
+            }
         }
-    }
-
-    void PlayerMovement()
-    {
-        Vector3 movement = Vector3.zero;
-
-        if (Input.GetAxis("Mouse Y") > 0)
-        {
-            movement += transform.TransformDirection(Vector3.forward);
-        }
-        else if (Input.GetAxis("Mouse Y") < 0)
-        {
-            movement += transform.TransformDirection(Vector3.back);
-        }
-
-        if (Input.GetAxis("Mouse X") > 0)
-        {
-            movement += transform.TransformDirection(Vector3.left);
-        }
-        else if (Input.GetAxis("Mouse X") < 0)
-        {
-            movement += transform.TransformDirection(Vector3.right);
-        }
-        controller.SimpleMove(Physics.gravity);
-        controller.SimpleMove(movement * speed);
     }
 }
